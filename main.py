@@ -4,105 +4,12 @@ import PIL
 # External packages
 import streamlit as st
 # Local Modules
-from ultralytics import YOLO
-import time
-import streamlit as st
-import cv2
 import configs
+import func
 
-
-
-## Function
-def load_model(model_path):
-    model = YOLO(model_path)
-    return model
-
-
-def display_tracker():
-    is_display_tracker = True
-    if is_display_tracker:
-        tracker_type = "bytetrack.yaml"
-        return is_display_tracker, tracker_type
-    return is_display_tracker, None
-
-
-def _display_detected_frames(conf, model, st_frame, image, is_display_tracking=None, tracker=None):
-    # Resize the image to a standard size
-    image = cv2.resize(image, (720, int(720*(9/16))))
-
-    # Display object tracking, if specified
-    if is_display_tracking:
-        res = model.track(image, conf=conf, persist=True, tracker=tracker)
-    else:
-        # Predict the objects in the image using the YOLOv8 model
-        res = model.predict(image, conf=conf)
-
-    # # Plot the detected objects on the video frame
-    res_plotted = res[0].plot()
-    st_frame.image(res_plotted,
-                   caption='Detected Video',
-                   channels="BGR",
-                   use_column_width=True
-                   )
-
-def play_webcam(conf, model):
-    source_webcam = configs.WEBCAM_PATH
-    is_display_tracker, tracker = display_tracker()
-    if st.button('Start Camera'):
-        try:
-            vid_cap = cv2.VideoCapture(source_webcam)
-            st_frame = st.empty()
-            while (vid_cap.isOpened()):
-                success, image = vid_cap.read()
-                if success:
-                    _display_detected_frames(conf,
-                                             model,
-                                             st_frame,
-                                             image,
-                                             is_display_tracker,
-                                             tracker,
-                                             )
-                else:
-                    vid_cap.release()
-                    break
-        except Exception as e:
-            st.sidebar.error("Error loading video: " + str(e))
-
-## configs
-from pathlib import Path
-import sys
-
-# Get the absolute path of the current file
-FILE = Path(__file__).resolve()
-# Get the parent directory of the current file
-ROOT = FILE.parent
-# Add the root path to the sys.path list if it is not already there
-if ROOT not in sys.path:
-    sys.path.append(str(ROOT))
-# Get the relative path of the root directory with respect to the current working directory
-ROOT = ROOT.relative_to(Path.cwd())
-
-# Sources
-IMAGE = 'Image'
-WEBCAM = 'Webcam'
-
-SOURCES_LIST = [IMAGE, WEBCAM]
-
-# Images config
-IMAGES_DIR = ROOT / 'images'
-
-# ML Model config
-MODEL_DIR = ROOT / 'models'
-DETECTION_MODEL = MODEL_DIR / 'yolov8l.pt'
-
-# Webcam
-WEBCAM_PATH = 0
-
-
-
-## Main page
 # Load Pre-trained ML Model
-model = func.load_model(configs.DETECTION_MODEL)
+model_image = func.load_model(configs.IMAGE_DETECTION_MODEL)
+model_live = func.load_model(configs.IMAGE_DETECTION_MODEL)
 
 # Setting page layout
 st.set_page_config(
@@ -138,8 +45,7 @@ if source_radio == configs.IMAGE:
                 st.write("Gambar Tidak ada!")
             else:
                 uploaded_image = PIL.Image.open(source_img)
-                st.image(source_img, caption="Uploaded Image",
-                         use_column_width=True)
+                st.image(source_img, caption="Uploaded Image", use_column_width=True)
         except Exception as ex:
             st.error("Error occurred while opening the image.")
             st.error(ex)
@@ -149,23 +55,20 @@ if source_radio == configs.IMAGE:
             st.write("Tidak ada gambar yang dideteksi!")
         else:
             if detect_btn:
-                res = model.predict(uploaded_image,
-                                    conf=0.7
-                                    )
+                res = model_image.predict(uploaded_image, conf=0.7)
                 boxes = res[0].boxes
                 res_plotted = res[0].plot()[:, :, ::-1]
-                st.image(res_plotted, caption='Detected Image',
-                         use_column_width=True)
+                st.image(res_plotted, caption='Detected Image', use_column_width=True)
                 try:
                     with st.expander("Detection Results"):
                         for box in boxes:
                             st.write(box.data)
                 except Exception as ex:
-                    # st.write(ex)
+                    st.write(ex)
                     st.write("No image is uploaded yet!")
 
 elif source_radio == configs.WEBCAM:
-    func.play_webcam(0.7, model)
+    func.play_webcam(0.7, model_live)
 
 else:
     st.error("Please select a valid source type!")
