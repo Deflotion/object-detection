@@ -21,7 +21,6 @@ streamlit main.py
 - config.py
 - func.py
 - main.py
-- app.py
 - requirements.txt
 
 This will start the application and launch it in your default web browser. You can then interact with the application to perform age, gender, and facial expression recognition.
