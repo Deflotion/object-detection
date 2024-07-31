@@ -22,8 +22,8 @@ IMAGES_DIR = ROOT / 'images'
 
 # ML Model config
 MODEL_DIR = ROOT / 'models'
-LIVE_DETECTION_MODEL = 'http://127.0.0.1:5000/live'
-IMAGE_DETECTION_MODEL = 'http://127.0.0.1:5000/predict'
+LIVE_DETECTION_MODEL = 'models/yolov8l.pt'
+IMAGE_DETECTION_MODEL = 'models/yolov8l.pt'
 
 # Webcam
 WEBCAM_PATH = 0

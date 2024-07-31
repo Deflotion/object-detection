@@ -3,3 +3,4 @@ __pycache__
 Apps
 venv
 mainlocal.py
+app.py
